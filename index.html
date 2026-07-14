@@ -271,7 +271,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            cursor: crosshair;
+            /* Integrated Custom Embedded SVG Pencil graphic. "0 0" maps the drawing tip point directly to the cursor. */
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M0 0l4 12 4-4 18 18 6-6-18-18 4-4z' fill='%23ffcc66'/><path d='M0 0l2 6 4-4z' fill='%23333333'/><path d='M22 6l4 4-14 14-4-4z' fill='%23e6b800'/><path d='M26 26l6-6-2-2-4 4z' fill='%23ff9999'/></svg>") 0 0, crosshair;
             touch-action: none; /* Stops system mobile scrolling while drawing */
         }
         
@@ -396,7 +397,7 @@
         <div class="victory-decorations" style="font-size: 40px; margin-bottom: 10px;">🎉✨🏆✨🎉</div>
         <div class="victory-title">CONGRATULATIONS!!!</div>
         <p style="font-size: 20px; font-weight: bold; color: #28a745;">VILLAGE G INFRASTRUCTURE IS SECURE!</p>
-        <p style="color: #555; line-height: 1.5; padding: 0 10px; font-size: 16px;">All 9 system calculations passed. The bridge can withstand the 300 kN total load, and the sewer line flows perfectly at a 2% slope!</p>
+        <p style="color: #555; line-height: 1.5; padding: 0 10px; font-size: 16px;">All 9 system calculations passed. The bridge can withstand  any load it takes, the sewer line flows perfectly around the village, and the citizens can enjoy a surplus of energy from their solar panels! </p>
         <div class="victory-decorations" style="font-size: 30px; margin: 15px 0;">🌟🎈🎨💥💮💥🎨🎈🌟</div>
         <div>
             <button class="action-btn" style="background: #28a745;" onclick="restartQuiz()">Restart Simulation</button>
