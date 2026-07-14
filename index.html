@@ -220,6 +220,44 @@
             0% { transform: translateY(0px) rotate(-2deg); }
             100% { transform: translateY(-8px) rotate(2deg); }
         }
+
+        /* 📱 THE MOBILE FIX: Triggers automatically on smaller screens */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            body::before {
+                left: 15px; /* Adjusts notebook line spacing for small screens */
+            }
+            .quiz-box {
+                padding: 15px;
+                width: 100%; /* Spans full width gracefully on mobile devices */
+            }
+            .content-layout.layout-normal, 
+            .content-layout.layout-reversed {
+                flex-direction: column !important; /* Stacks text above image naturally */
+                gap: 15px;
+            }
+            .image-column, .text-column {
+                width: 100%; /* Allocates comfortable reading space */
+            }
+            .diagram-img {
+                max-width: 100%; /* Scales down smoothly without overflows */
+            }
+            h1 {
+                font-size: 20px;
+            }
+            .subtitle {
+                font-size: 14px;
+            }
+            .question-text {
+                font-size: 16px;
+            }
+            .option-btn {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+        }
     </style>
 </head>
 <body>
