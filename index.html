@@ -200,7 +200,14 @@
             color: #155724 !important;
             font-weight: bold;
         }
-        .hidden { display: none !important; } /* Enforced absolute hide rule */
+        
+        .hidden { display: none !important; }
+        
+        /* Absolute lockdown to prevent early element leaks */
+        #imageModal.hidden {
+            display: none !important;
+        }
+
         .center { text-align: center; }
         
         .victory-title {
@@ -352,14 +359,14 @@
     <div id="start-screen">
         <h1>Math Trigonometry Assignment Game (Quiz)</h1>
         <p class="subtitle">Trigonometry Applications in Civil Engineering</p>
-        <p style="line-height: 1.6; font-size: 16px;">Hello! This is Math Project Group 9's interactive quiz based on our comic strips that shows Village G. It covers the trigonometry formulas needed for the bridge loads and the sewer design line. Let's see if you can get all 8 right!</p>
+        <p style="line-height: 1.6; font-size: 16px;">Hello! This is Math Project Group 9's interactive quiz based on our comic strips that shows Village G. It covers the trigonometry formulas needed for the bridge loads and the sewer design line. Let's see if you can get all 9 right!</p>
         <div class="center" style="margin-top: 30px;">
             <button class="action-btn" onclick="startQuiz()">Click to Start Quiz</button>
         </div>
     </div>
 
     <div id="quiz-screen" class="hidden">
-        <div style="font-size: 14px; color: #777; margin-bottom: 5px;" id="q-counter">Question 1 of 8</div>
+        <div style="font-size: 14px; color: #777; margin-bottom: 5px;" id="q-counter">Question 1 of 9</div>
         
         <div class="content-layout" id="quiz-layout">
             <div class="text-column">
@@ -485,7 +492,6 @@
 
     function displayQuestion() {
         const qData = quizQuestions[currentQ];
-        // Dynamic Question Counter updates based on array sizing limits
         document.getElementById('q-counter').innerText = `Question ${currentQ + 1} of ${quizQuestions.length}`;
         document.getElementById('q-text').innerText = qData.q;
         
