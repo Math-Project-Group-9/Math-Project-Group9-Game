@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trig Project - Village G</title>
+    <style>
+        body {
+            background-color: #f4f1ea; /* Light paper/cork tone */
+            font-family: "Comic Sans MS", "Chalkboard SE", sans-serif;
+            color: #222222;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Notebook margin decoration line for realism */
+        body::before {
+            content: "";
+            position: fixed;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(217, 83, 79, 0.3); /* Soft pink vertical line */
+            z-index: -1;
+        }
+
+        .quiz-box {
+            background: #ffffff;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 30px;
+            width: 850px; /* Widened slightly to fit the side-by-side diagram layout nicely */
+            max-width: 95%;
+            box-shadow: 6px 6px 0px #333; /* Flat hand-drawn shadow */
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        h1 {
+            color: #0056b3;
+            font-size: 24px;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 2px dashed #ccc;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-top: -5px;
+            margin-bottom: 20px;
+        }
+        
+        /* Two-column layout container for question content and image */
+        .content-layout {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        /* Helper classes to switch the layout direction dynamically */
+        .layout-normal { flex-direction: row; }
+        .layout-reversed { flex-direction: row-reverse; }
+
+        .text-column {
+            flex: 1.2; /* Gives slightly more space to text and options */
+        }
+
+        .image-column {
+            flex: 0.8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .diagram-img {
+            max-width: 100%;
+            max-height: 280px;
+            border: 2px dashed #555;
+            border-radius: 6px;
+            padding: 5px;
+            background: #fafafa;
+            object-fit: contain;
+        }
+
+        .question-text {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            background: #fdf6e2; /* Highlighted notebook feel */
+            padding: 15px;
+            border-left: 4px solid #f0ad4e;
+            border-radius: 4px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            background: #ffffff;
+            border: 1.5px solid #444;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+        /* Dynamic scale effect on hover */
+        .option-btn:hover {
+            background: #f0f4f8;
+            border-color: #0056b3;
+            transform: scale(1.01) translateX(4px);
+        }
+        .option-btn:active {
+            transform: scale(0.99);
+        }
+        .action-btn {
+            background: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0px #222;
+        }
+        .action-btn:hover { 
+            background: #004085; 
+            transform: translateY(-1px);
+            box-shadow: 3px 3px 0px #222;
+        }
+        .action-btn:active {
+            transform: translateY(1px);
+            box-shadow: 1px 1px 0px #222;
+        }
+        .give-up { background: #6c757d; margin-left: 10px; }
+        .give-up:hover { background: #5a6268; }
+        .try-again { background: #d9534f; }
+        .try-again:hover { background: #c9302c; }
+        
+        .wrong-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .wrong-msg {
+            color: #d9534f;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            animation: shake 0.4s ease-in-out;
+        }
+        
+        /* Natural student assignment shake effect when incorrect */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .proof-box {
+            background: #e2f0d9;
+            border: 1px dashed #385723;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            border-radius: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .correct-reveal {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724 !important;
+            font-weight: bold;
+        }
+        .hidden { display: none; }
+        .center { text-align: center; }
+        
+        .victory-title {
+            color: #d4af37;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 0px #333;
+            animation: popText 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Fun entrance for the decorations */
+        .victory-decorations {
+            display: inline-block;
+            animation: bounceDecor 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes popText {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounceDecor {
+            0% { transform: translateY(0px) rotate(-2deg); }
+            100% { transform: translateY(-8px) rotate(2deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-box">
+    <div id="start-screen">
+        <h1>Math Trigonometry Assignment Game (Quiz)</h1>
+        <p class="subtitle">Trigonometry Applications in Civil Engineering</p>
+        <p style="line-height: 1.5;">Hello! This is Math Project Group 9's interactive quiz based on our comic strips that shows Village G. It covers the trigonometry formulas needed for the bridge loads and the sewer design line. Let's see if you can get all 8 right!</p>
+        <div class="center" style="margin-top: 30px;">
+            <button class="action-btn" onclick="startQuiz()">Click to Start Quiz</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div style="font-size: 13px; color: #777; margin-bottom: 5px;" id="q-counter">Question 1 of 8</div>
+        
+        <div class="content-layout" id="quiz-layout">
+            <div class="text-column">
+                <div class="question-text" id="q-text">Question text loads here...</div>
+                <div class="options-list" id="options-container"></div>
+            </div>
+            
+            <div class="image-column">
+                <img src="" alt="Problem Diagram" class="diagram-img" id="q-image">
+            </div>
+        </div>
+    </div>
+
+    <div id="wrong-screen" class="hidden">
+        <div class="wrong-container">
+            <div class="wrong-msg">❌ Wrong answer! Try again?</div>
+            <p style="color: #555;">The math doesn't match our structural blueprints. Your bridge will collapse or the sewage will back up!</p>
+            <div style="margin-top: 20px;">
+                <button class="action-btn try-again" onclick="clickTryAgain()">Try Again</button>
+                <button class="action-btn give-up" id="give-up-trigger" onclick="clickGiveUp()">Give up?</button>
+            </div>
+            <div id="proof-area" class="proof-box hidden"></div>
+        </div>
+    </div>
+
+    <div id="victory-screen" class="hidden center">
+        <div class="victory-decorations" style="font-size: 40px; margin-bottom: 10px;">🎉✨🏆✨🎉</div>
+        <div class="victory-title">CONGRATULATIONS!!!</div>
+        <p style="font-size: 18px; font-weight: bold; color: #28a745;">VILLAGE G INFRASTRUCTURE IS SECURE!</p>
+        <p style="color: #555; line-height: 1.5; padding: 0 10px;">All 8 system calculations passed. The bridge can withstand the 300 kN total load, and the sewer line flows perfectly at a 2% slope!</p>
+        <div class="victory-decorations" style="font-size: 30px; margin: 15px 0;">🌟🎈🎨💥💮💥🎨🎈🌟</div>
+        <div>
+            <button class="action-btn" style="background: #28a745;" onclick="restartQuiz()">Restart Simulation</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // All paths mapped strictly to uppercase Q filenames as requested.
+    const quizQuestions = [
+        {
+            q: "1. Let's look at the bridge section of the village. The total downward load vector on the 30° slope arch is 300 kN. Using the sine function, what is the vertical force (Fvertical) hitting the foundation pillars?",
+            options: ["A) 100 kN", "B) 150 kN", "C) 200 kN", "D) 259.8 kN"],
+            correct: 1, // B
+            explain: "Formula from image: Fvertical = 300 kN * sin(30°). Since sin(30°) = 0.5, 300 * 0.5 = 150 kN!",
+            diagram: "Q1.jpg" 
+        },
+        {
+            q: "2. Keeping it on the same bridge design from the first question, we need to find the outward horizontal thrust (Fhorizontal) pushing against those heavy pillars. What is the value when you calculate 300 kN * cos(30°)?",
+            options: ["A) 150 kN", "B) 259.8 kN", "C) 300 kN", "D) 280.5 kN"],
+            correct: 1, // B
+            explain: "Formula from image: Fhorizontal = 300 kN * cos(30°). Since cos(30°) is roughly 0.866, 300 * 0.866 = 259.8 kN!",
+            diagram: "Q2.jpg"
+        },
+        {
+            q: "3. Now let's look over to the sewage system design of the village. The standard pipe needs a self-cleansing slope of 2%. If the horizontal length towards the collection tank is exactly 150 meters, what is the required vertical length of the pipe?",
+            options: ["A) 2.0 meters", "B) 1.5 meters", "C) 3.0 meters", "D) 4.5 meters"],
+            correct: 2, // C
+            explain: "As shown in the example calculation: Drop = 150 m * 0.02 = 3.0 meters!",
+            diagram: "Q3.jpg"
+        },
+        {
+            q: "4. Looking at that same sewer design from the question before this, what trigonometric function value represents the 2% slope angle alpha (α) where the height is 3.0m and the length is 150m?",
+            options: ["A) tan(α) = 0.02", "B) sin(α) = 0.02", "C) cos(α) = 0.98", "D) tan(α) = 0.20"],
+            correct: 0, // A
+            explain: "From the sheet: tan(α) = 3.0 m Drop / 150 m Run = 0.02 (which translates to our 2% slope value).",
+            diagram: "Q4.jpg"
+        },
+        {
+            q: "5. Let's say the field team hits bedrock and has to shorten the sewer horizontal length to 100 meters, but we MUST keep that exact same 2% slope for gravity flow. What would our new vertical height have to be?",
+            options: ["A) 1.0 meter", "B) 2.0 meters", "C) 3.0 meters", "D) 0.5 meters"],
+            correct: 1, // B
+            explain: "Using the drop formula: Drop = 100 m * 0.02 = 2.0 meters.",
+            diagram: "Q5.jpg"
+        },
+        {
+            q: "6. Imagine our village access bridge arch slope is modified in a new layout from 30° up to 45° to clear higher flood levels, keeping the same total load vector of 300 kN. What would the new vertical force component be? (Hint: sin(45°) = 0.7071)",
+            options: ["A) 150.0 kN", "B) 212.1 kN", "C) 259.8 kN", "D) 300.0 kN"],
+            correct: 1, // B
+            explain: "New calculation: Fvertical = 300 kN * sin(45°) = 300 * 0.7071 = 212.13 kN!",
+            diagram: "Q6.jpg"
+        },
+        {
+            q: "7. Back to the original sewage design. If a different cluster line has a total elevation downwards of 4.0 meters over a horizontal length of 200 meters, does it still satisfy our engineering goal of a 2% slope?",
+            options: ["A) No, it is 1%", "B) No, it is 4%", "C) Yes, tan(α) equals 0.02", "D) Yes, tan(α) equals 0.04"],
+            correct: 2, // C
+            explain: "4.0 m / 200 m = 0.02, which is exactly a 2% slope. So yes, it completely fits!",
+            diagram: "Q7.jpg"
+        },
+        {
+            q: "8. Last one! If the total load component on our bridge structure suddenly increases to 400 kN during a massive village festival, but the angle stays at 30°, what is the new horizontal thrust outward to the foundation pillars?",
+            options: ["A) 259.8 kN", "B) 200.0 kN", "C) 346.4 kN", "D) 400.0 kN"],
+            correct: 2, // C
+            explain: "Updated formula: Fhorizontal = 400 kN * cos(30°) = 400 * 0.8660 = 346.4 kN!",
+            diagram: "Q8.jpg"
+        }
+    ];
+
+    let currentQ = 0;
+
+    function startQuiz() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        displayQuestion();
+    }
+
+    function displayQuestion() {
+        const qData = quizQuestions[currentQ];
+        document.getElementById('q-counter').innerText = `Question ${currentQ + 1} of 8`;
+        document.getElementById('q-text').innerText = qData.q;
+        
+        // Handle image source allocation
+        const imgElement = document.getElementById('q-image');
+        imgElement.src = qData.diagram;
+        
+        // Dynamic side switching rule (alternates left and right seamlessly)
+        const layoutContainer = document.getElementById('quiz-layout');
+        if (currentQ % 2 === 0) {
+            layoutContainer.className = "content-layout layout-normal"; // Picture on the right side
+        } else {
+            layoutContainer.className = "content-layout layout-reversed"; // Picture on the left side
+        }
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        qData.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => verifyAnswer(idx);
+            container.appendChild(btn);
+        });
+    }
+
+    function verifyAnswer(selected) {
+        const correct = quizQuestions[currentQ].correct;
+        if (selected === correct) {
+            currentQ++;
+            if (currentQ < quizQuestions.length) {
+                displayQuestion();
+            } else {
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('victory-screen').classList.remove('hidden');
+            }
+        } else {
+            // Mistake route
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('wrong-screen').classList.remove('hidden');
+            document.getElementById('proof-area').classList.add('hidden');
+            document.getElementById('proof-area').innerHTML = '';
+        }
+    }
+
+    function clickTryAgain() {
+        document.getElementById('wrong-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        displayQuestion();
+    }
+
+    function clickGiveUp() {
+        const qData = quizQuestions[currentQ];
+        const proofArea = document.getElementById('proof-area');
+        
+        // Render step-by-step breakdown text inside a simple box
+        proofArea.innerHTML = `
+            <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">Showing Project Calculation Sheet:</div>
+            <div>${qData.explain}</div>
+            <button class="action-btn" style="background:#6c757d; margin-top:10px; font-size:13px; padding:5px 10px;" onclick="clickTryAgain()">Return and Select Answer</button>
+        `;
+        proofArea.classList.remove('hidden');
+    }
+
+    function restartQuiz() {
+        currentQ = 0;
+        document.getElementById('victory-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
