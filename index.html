@@ -90,6 +90,12 @@
             padding: 5px;
             background: #f1f1f1;
             object-fit: contain;
+            cursor: zoom-in; /* Let the user know it can be expanded */
+            transition: transform 0.2s;
+        }
+        
+        .diagram-img:hover {
+            transform: scale(1.01);
         }
 
         .question-text {
@@ -221,28 +227,103 @@
             100% { transform: translateY(-8px) rotate(2deg); }
         }
 
-        /* 📱 THE MOBILE FIX: Triggers automatically on smaller screens */
+        /* 📱 Discord/WhatsApp-Style Interactive Fullscreen Modal Interface */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-container {
+            position: relative;
+            max-width: 90%;
+            max-height: 85%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* The expanded image element */
+        .modal-img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        
+        /* Canvas workspace overlaying the image perfectly for live sketching */
+        .drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            touch-action: none; /* Stops system mobile scrolling while drawing */
+        }
+        
+        .modal-controls {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            display: flex;
+            gap: 10px;
+            z-index: 10000;
+        }
+        
+        .modal-btn {
+            background: #ffffff;
+            color: #333333;
+            border: 2px solid #333;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #000;
+            font-family: sans-serif;
+        }
+        
+        .modal-btn:hover {
+            background: #f0f4f8;
+        }
+        
+        .modal-btn.close-btn {
+            background: #d9534f;
+            color: white;
+        }
+        
+        .modal-btn.close-btn:hover {
+            background: #c9302c;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
             }
             body::before {
-                left: 15px; /* Adjusts notebook line spacing for small screens */
+                left: 15px;
             }
             .quiz-box {
                 padding: 15px;
-                width: 100%; /* Spans full width gracefully on mobile devices */
+                width: 100%;
             }
             .content-layout.layout-normal, 
             .content-layout.layout-reversed {
-                flex-direction: column !important; /* Stacks text above image naturally */
+                flex-direction: column !important;
                 gap: 15px;
             }
             .image-column, .text-column {
-                width: 100%; /* Allocates comfortable reading space */
+                width: 100%;
             }
             .diagram-img {
-                max-width: 100%; /* Scales down smoothly without overflows */
+                max-width: 100%;
             }
             h1 {
                 font-size: 20px;
@@ -256,6 +337,11 @@
             .option-btn {
                 font-size: 14px;
                 padding: 10px 12px;
+            }
+            .modal-controls {
+                top: -45px;
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
@@ -282,7 +368,7 @@
             </div>
             
             <div class="image-column">
-                <img src="" alt="Problem Diagram" class="diagram-img" id="q-image">
+                <img src="" alt="Problem Diagram" class="diagram-img" id="q-image" onclick="openImageModal()">
             </div>
         </div>
     </div>
@@ -303,7 +389,7 @@
         <div class="victory-decorations" style="font-size: 40px; margin-bottom: 10px;">🎉✨🏆✨🎉</div>
         <div class="victory-title">CONGRATULATIONS!!!</div>
         <p style="font-size: 20px; font-weight: bold; color: #28a745;">VILLAGE G INFRASTRUCTURE IS SECURE!</p>
-        <p style="color: #555; line-height: 1.5; padding: 0 10px; font-size: 16px;">All 8 system calculations passed. The bridge can withstand the 300 kN total load, and the sewer line flows perfectly at a 2% slope!</p>
+        <p style="color: #555; line-height: 1.5; padding: 0 10px; font-size: 16px;">All 9 system calculations passed. The bridge can withstand the 300 kN total load, and the sewer line flows perfectly at a 2% slope!</p>
         <div class="victory-decorations" style="font-size: 30px; margin: 15px 0;">🌟🎈🎨💥💮💥🎨🎈🌟</div>
         <div>
             <button class="action-btn" style="background: #28a745;" onclick="restartQuiz()">Restart Simulation</button>
@@ -311,64 +397,81 @@
     </div>
 </div>
 
+<div id="imageModal" class="modal-overlay hidden">
+    <div class="modal-container">
+        <div class="modal-controls">
+            <button class="modal-btn" onclick="clearCanvas()">Clear Board</button>
+            <button class="modal-btn close-btn" onclick="closeImageModal()">Close View</button>
+        </div>
+        <img id="modalExpandedImg" src="" alt="Expanded View" class="modal-img">
+        <canvas id="drawingLayer" class="drawing-canvas"></canvas>
+    </div>
+</div>
+
 <script>
-    // All paths mapped strictly to uppercase Q filenames as requested.
     const quizQuestions = [
         {
             q: "1. Let's look at the bridge section of the village. The total downward load vector on the 30° slope arch is 300 kN. Using the sine function, what is the vertical force (Fvertical) hitting the foundation pillars?",
             options: ["A) 100 kN", "B) 150 kN", "C) 200 kN", "D) 259.8 kN"],
-            correct: 1, // B
+            correct: 1, 
             explain: "Formula from image: Fvertical = 300 kN * sin(30°). Since sin(30°) = 0.5, 300 * 0.5 = 150 kN!",
             diagram: "Q1.jpg" 
         },
         {
             q: "2. Keeping it on the same bridge design from the first question, we need to find the outward horizontal thrust (Fhorizontal) pushing against those heavy pillars. What is the value when you calculate 300 kN * cos(30°)?",
             options: ["A) 150 kN", "B) 259.8 kN", "C) 300 kN", "D) 280.5 kN"],
-            correct: 1, // B
+            correct: 1, 
             explain: "Formula from image: Fhorizontal = 300 kN * cos(30°). Since cos(30°) is roughly 0.866, 300 * 0.866 = 259.8 kN!",
             diagram: "Q2.jpg"
         },
         {
             q: "3. Now let's look over to the sewage system design of the village. The standard pipe needs a self-cleansing slope of 2%. If the horizontal length towards the collection tank is exactly 150 meters, what is the required vertical length of the pipe?",
             options: ["A) 2.0 meters", "B) 1.5 meters", "C) 3.0 meters", "D) 4.5 meters"],
-            correct: 2, // C
+            correct: 2, 
             explain: "As shown in the example calculation: Drop = 150 m * 0.02 = 3.0 meters!",
             diagram: "Q3.jpg"
         },
         {
             q: "4. Looking at that same sewer design from the question before this, what trigonometric function value represents the 2% slope angle alpha (α) where the height is 3.0m and the length is 150m?",
             options: ["A) tan(α) = 0.02", "B) sin(α) = 0.02", "C) cos(α) = 0.98", "D) tan(α) = 0.20"],
-            correct: 0, // A
+            correct: 0, 
             explain: "From the sheet: tan(α) = 3.0 m Drop / 150 m Run = 0.02 (which translates to our 2% slope value).",
             diagram: "Q4.jpg"
         },
         {
             q: "5. Let's say the field team hits bedrock and has to shorten the sewer horizontal length to 100 meters, but we MUST keep that exact same 2% slope for gravity flow. What would our new vertical height have to be?",
             options: ["A) 1.0 meter", "B) 2.0 meters", "C) 3.0 meters", "D) 0.5 meters"],
-            correct: 1, // B
+            correct: 1, 
             explain: "Using the drop formula: Drop = 100 m * 0.02 = 2.0 meters.",
             diagram: "Q5.jpg"
         },
         {
             q: "6. Imagine our village access bridge arch slope is modified in a new layout from 30° up to 45° to clear higher flood levels, keeping the same total load vector of 300 kN. What would the new vertical force component be? (Hint: sin(45°) = 0.7071)",
             options: ["A) 150.0 kN", "B) 212.1 kN", "C) 259.8 kN", "D) 300.0 kN"],
-            correct: 1, // B
+            correct: 1, 
             explain: "New calculation: Fvertical = 300 kN * sin(45°) = 300 * 0.7071 = 212.13 kN!",
             diagram: "Q6.jpg"
         },
         {
             q: "7. Back to the original sewage design. If a different cluster line has a total elevation downwards of 4.0 meters over a horizontal length of 200 meters, does it still satisfy our engineering goal of a 2% slope?",
             options: ["A) No, it is 1%", "B) No, it is 4%", "C) Yes, tan(α) equals 0.02", "D) Yes, tan(α) equals 0.04"],
-            correct: 2, // C
+            correct: 2, 
             explain: "4.0 m / 200 m = 0.02, which is exactly a 2% slope. So yes, it completely fits!",
             diagram: "Q7.jpg"
         },
         {
-            q: "8. Last one! If the total load component on our bridge structure suddenly increases to 400 kN during a massive village festival, but the angle stays at 30°, what is the new horizontal thrust outward to the foundation pillars?",
+            q: "8. If the total load component on our bridge structure suddenly increases to 400 kN during a massive village festival, but the angle stays at 30°, what is the new horizontal thrust outward to the foundation pillars?",
             options: ["A) 259.8 kN", "B) 200.0 kN", "C) 346.4 kN", "D) 400.0 kN"],
-            correct: 2, // C
+            correct: 2, 
             explain: "Updated formula: Fhorizontal = 400 kN * cos(30°) = 400 * 0.8660 = 346.4 kN!",
             diagram: "Q8.jpg"
+        },
+        {
+            q: "9. Finally, let's design the solar panel array for Village G. if the latitude is 3.1° and the tilting on Earth's axis is -23.45° , what is the ideal orientation tilt (θ) for the solar panel framework layout?",
+            options: ["A) 26.55°", "B) 20.00°", "C) 6.55°", "D) 46.55°"],
+            correct: 2, 
+            explain: "the total angle for B is latitude - tilting axis , which is B = 3.1° - (-23.45°) = 26.55°. Then, the panel framework tilt θ = β - 20° = 26.55° - 20° = 6.55°!",
+            diagram: "Q9.jpg"
         }
     ];
 
@@ -382,19 +485,24 @@
 
     function displayQuestion() {
         const qData = quizQuestions[currentQ];
-        document.getElementById('q-counter').innerText = `Question ${currentQ + 1} of 8`;
+        document.getElementById('q-counter').innerText = `Question ${currentQ + 1} of ${quizQuestions.length}`;
         document.getElementById('q-text').innerText = qData.q;
         
-        // Handle image source allocation
         const imgElement = document.getElementById('q-image');
         imgElement.src = qData.diagram;
         
-        // Dynamic side switching rule (alternates left and right seamlessly)
+        // Hide image placeholder frame dynamically if diagram path is empty string (like Q9 before binding)
+        if(qData.diagram === "") {
+            imgElement.style.display = "none";
+        } else {
+            imgElement.style.display = "block";
+        }
+        
         const layoutContainer = document.getElementById('quiz-layout');
         if (currentQ % 2 === 0) {
-            layoutContainer.className = "content-layout layout-normal"; // Picture on the right side
+            layoutContainer.className = "content-layout layout-normal";
         } else {
-            layoutContainer.className = "content-layout layout-reversed"; // Picture on the left side
+            layoutContainer.className = "content-layout layout-reversed";
         }
 
         const container = document.getElementById('options-container');
@@ -420,7 +528,6 @@
                 document.getElementById('victory-screen').classList.remove('hidden');
             }
         } else {
-            // Mistake route
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('wrong-screen').classList.remove('hidden');
             document.getElementById('proof-area').classList.add('hidden');
@@ -438,7 +545,6 @@
         const qData = quizQuestions[currentQ];
         const proofArea = document.getElementById('proof-area');
         
-        // Render step-by-step breakdown text inside a simple box
         proofArea.innerHTML = `
             <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">Showing Project Calculation Sheet:</div>
             <div>${qData.explain}</div>
@@ -452,6 +558,101 @@
         document.getElementById('victory-screen').classList.add('hidden');
         document.getElementById('start-screen').classList.remove('hidden');
     }
+
+    /* ==========================================
+       🆕 FULLSCREEN INTERACTIVE CANVAS DRAWING ENGINE 
+       ========================================== */
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalExpandedImg');
+    const canvas = document.getElementById('drawingLayer');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    function openImageModal() {
+        const currentSrc = document.getElementById('q-image').src;
+        if(!currentSrc || quizQuestions[currentQ].diagram === "") return;
+        
+        modalImg.src = currentSrc;
+        modal.classList.remove('hidden');
+        
+        // Wait for image layout to update window positions to sync canvas sizes precisely
+        modalImg.onload = function() {
+            resizeCanvas();
+        };
+        // Fallback sync if already loaded cached image items
+        setTimeout(resizeCanvas, 50);
+    }
+
+    function closeImageModal() {
+        modal.classList.add('hidden');
+        clearCanvas();
+    }
+
+    function resizeCanvas() {
+        canvas.width = modalImg.clientWidth;
+        canvas.height = modalImg.clientHeight;
+        canvas.style.width = modalImg.clientWidth + 'px';
+        canvas.style.height = modalImg.clientHeight + 'px';
+        
+        // Configure standard brush details (high visibility red marker color)
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    // Sync scaling when viewport dimensions are manually adjusted
+    window.addEventListener('resize', () => {
+        if (!modal.classList.contains('hidden')) {
+            resizeCanvas();
+        }
+    });
+
+    // Helper functions to get accurate localized coordinates relative to canvas positioning context
+    function getCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        // Support touch screens (stylus/finger) as well as regular standard mouse trackers
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        const coords = getCoords(e);
+        ctx.beginPath();
+        ctx.moveTo(coords.x, coords.y);
+        e.preventDefault();
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const coords = getCoords(e);
+        ctx.lineTo(coords.x, coords.y);
+        ctx.stroke();
+        e.preventDefault();
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Attach drawing layer event event handlers hooks
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
 </script>
 
 </body>
